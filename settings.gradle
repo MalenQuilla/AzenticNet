@@ -1,0 +1,8 @@
+rootProject.name = 'CheatingDetectionSystem'
+include ':cloud:eureka'
+include ':cloud:gateway'
+include ':cloud:config'
+
+include ':common'
+include ':microservices:authentication'
+include ':microservices:user'

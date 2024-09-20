@@ -1,0 +1,14 @@
+services:
+  database:
+    container_name: cds-mysql
+    image: mysql:8.0.34
+    restart: always
+    environment:
+      - MYSQL_ROOT_PASSWORD=root1234
+    ports:
+      - '3306:3306'
+    volumes:
+      - mysql_database:/var/lib/mysql
+volumes:
+  mysql_database:
+    driver: local
