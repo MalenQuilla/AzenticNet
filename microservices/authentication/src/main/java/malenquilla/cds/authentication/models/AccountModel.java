@@ -36,7 +36,7 @@ public class AccountModel {
     @Min(0)
     private Long userId;
 
-    @OneToOne(fetch = FetchType.LAZY)
+    @OneToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "role_id", nullable = false)
     private RoleModel role;
 }

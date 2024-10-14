@@ -21,13 +21,16 @@ public class GatewayConfig {
     public RouteLocator routes(RouteLocatorBuilder builder) {
         return builder.routes()
                       .route("auth-service", route ->
-                              route.path("/api/v1/auth/**")
+                              route.path(
+                                           "/api/v1/accounts/**",
+                                           "/api/v1/roles/**",
+                                           "/api/v1/auth/**")
                                    .filters(f -> f.filter(this.authenticationFilter()))
-                                   .uri("lb://auth-service"))
+                                   .uri("http://localhost:7000"))
                       .route("user-service", route ->
                               route.path("/api/v1/users/**")
                                    .filters(f -> f.filter(this.authenticationFilter()))
-                                   .uri("lb://user-service"))
+                                   .uri("http://localhost:7001"))
                       .build();
     }
 }

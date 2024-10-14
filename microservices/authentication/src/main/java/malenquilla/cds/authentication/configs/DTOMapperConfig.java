@@ -1,7 +1,7 @@
 package malenquilla.cds.authentication.configs;
 
-import malenquilla.cds.authentication.dto_mappers.AccountMapper;
-import malenquilla.cds.authentication.dto_mappers.RoleMapper;
+import malenquilla.cds.authentication.object_mappers.dto_mappers.AccountMapper;
+import malenquilla.cds.authentication.object_mappers.dto_mappers.RoleMapper;
 import org.modelmapper.ModelMapper;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

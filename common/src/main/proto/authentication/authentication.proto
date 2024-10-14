@@ -1,0 +1,13 @@
+syntax = "proto3";
+package authentication;
+option java_package = "malenquilla.cds.grpc.proto.authentication";
+option java_multiple_files = true;
+import "common.proto";
+
+message VerifyAuthenticationRequest {
+  string accessToken = 1;
+}
+
+service AuthenticationController {
+  rpc verifyAuthentication(VerifyAuthenticationRequest) returns (common.AuthoritiesDetailsGrpc) {};
+}

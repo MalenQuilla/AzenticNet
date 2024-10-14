@@ -21,7 +21,6 @@ public class RoleModel {
     @NotBlank
     private String name;
 
-    @NotBlank
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
             name = "role_authority_mapping",

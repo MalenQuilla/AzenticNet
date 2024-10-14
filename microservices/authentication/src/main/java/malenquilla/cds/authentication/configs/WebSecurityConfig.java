@@ -1,11 +1,12 @@
 package malenquilla.cds.authentication.configs;
 
-import malenquilla.cds.authentication.services.AuthenticationService;
-import malenquilla.cds.authentication.services.UserDetailsServiceImpl;
+import lombok.RequiredArgsConstructor;
+import malenquilla.cds.authentication.services.impl.AccountDetailsServiceImpl;
 import malenquilla.cds.authentication.utils.AuthTokenFilter;
 import malenquilla.cds.authentication.utils.JwtUtils;
 import malenquilla.cds.common.security.CommonAuthEntryPoint;
-import org.springframework.beans.factory.annotation.Autowired;
+import malenquilla.cds.common.utils.CookiesUtils;
+import malenquilla.cds.common.utils.RuntimeEnvUtils;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -22,21 +23,20 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
-@EnableWebSecurity
 @EnableMethodSecurity
+@EnableWebSecurity
+@RequiredArgsConstructor
 public class WebSecurityConfig {
-    private final UserDetailsServiceImpl userDetailsService;
+    private final AccountDetailsServiceImpl accountDetailsServiceImpl;
 
-    @Autowired
-    public WebSecurityConfig(
-            UserDetailsServiceImpl userDetailsService
-    ) {
-        this.userDetailsService = userDetailsService;
+    @Bean
+    public RuntimeEnvUtils runtimeEnvUtils() {
+        return new RuntimeEnvUtils();
     }
 
     @Bean
-    public AuthenticationService authenticationService() {
-        return new AuthenticationService(this.jwtUtils(), this.userDetailsService);
+    public CookiesUtils cookiesUtils() {
+        return new CookiesUtils(this.runtimeEnvUtils());
     }
 
     @Bean
@@ -56,7 +56,7 @@ public class WebSecurityConfig {
 
     @Bean
     public AuthTokenFilter authTokenFilter() {
-        return new AuthTokenFilter(this.authenticationService());
+        return new AuthTokenFilter();
     }
 
     @Bean
@@ -68,7 +68,7 @@ public class WebSecurityConfig {
     public DaoAuthenticationProvider daoAuthenticationProvider() {
         DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
 
-        authProvider.setUserDetailsService(this.userDetailsService);
+        authProvider.setUserDetailsService(this.accountDetailsServiceImpl);
         authProvider.setPasswordEncoder(this.passwordEncoder());
 
         return authProvider;
@@ -80,8 +80,13 @@ public class WebSecurityConfig {
             .exceptionHandling(exception -> exception.authenticationEntryPoint(this.authEntryPoint()))
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(authorizeRequests ->
-                    // TODO: change path to permit
-                    authorizeRequests.requestMatchers("/api/v1/roles/**").permitAll()
+                    authorizeRequests.requestMatchers(
+                                             "/api/v1/auth/login",
+                                             "/api/v1/auth/request-activation/**",
+                                             "/api/v1/auth/logout",
+                                             "/api/v1/auth/refresh"
+                                     )
+                                     .permitAll()
                                      .anyRequest().authenticated()
             );
 

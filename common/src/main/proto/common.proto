@@ -1,0 +1,9 @@
+syntax = "proto3";
+package common;
+option java_package = "malenquilla.cds.grpc.proto";
+option java_multiple_files = true;
+
+message AuthoritiesDetailsGrpc {
+  int64 userId = 1;
+  repeated string authorities = 2;
+}

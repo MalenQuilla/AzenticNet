@@ -14,7 +14,5 @@ import java.util.Set;
 public interface RoleRepository extends JpaRepository<RoleModel, Long> {
     Optional<RoleModel> getByName(String name);
 
-    @Modifying
-    @Query("update RoleModel as roles set roles.name = :name, roles.authorities = :authorities where roles.id = :id")
-    void updateById(Long id, String name, Set<AuthorityModel> authorities);
+    boolean existsByName(String name);
 }

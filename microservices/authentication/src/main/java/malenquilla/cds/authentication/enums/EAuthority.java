@@ -8,10 +8,21 @@ import java.util.stream.Stream;
  * Add authorities here to automatically add to database
  */
 public enum EAuthority implements GrantedAuthority {
-    VIEW_ROLES,
-    MANAGE_ROLES,
-    VIEW_ACCOUNTS,
-    MANAGE_ACCOUNTS,
+    READ_ROLES,
+    CREATE_ROLES,
+    UPDATE_ROLES,
+    DELETE_ROLES,
+
+    READ_ACCOUNTS,
+    CREATE_ACCOUNTS,
+    UPDATE_ACCOUNTS,
+    DELETE_ACCOUNTS,
+
+    READ_USERS,
+    CREATE_USERS,
+    UPDATE_USERS,
+    DELETE_USERS,
+
     ;
 
     @Override

@@ -4,7 +4,8 @@ import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import jakarta.annotation.PostConstruct;
 import malenquilla.cds.authentication.enums.ETokenType;
-import malenquilla.cds.common.security.UserDetailsImpl;
+import malenquilla.cds.authentication.models.AccountDetails;
+import malenquilla.cds.common.exceptions.UnauthorizedException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 
@@ -15,36 +16,67 @@ import java.util.logging.Logger;
 
 public class JwtUtils {
     private static final Logger logger = Logger.getLogger(JwtUtils.class.getName());
+    private static String JWT_SECRET;
+    private static Long ACCESS_TOKEN_EXPIRATION_MS;
+    private static Long REFRESH_TOKEN_EXPIRATION_MS;
 
-    @Value("${cds.app.jwtSecret}")
-    private String jwtSecret;
     private SecretKey secretKey;
 
+    @Value("${cds.app.jwtSecret}")
+    public void setJwtSecret(String jwtSecret) {
+        JwtUtils.JWT_SECRET = jwtSecret;
+    }
+
     @Value("${cds.app.accessJwtExpirationMs}")
-    private Long accessTokenExp;
+    public void setAccessTokenExpirationMs(Long accessTokenExpirationMs) {
+        JwtUtils.ACCESS_TOKEN_EXPIRATION_MS = accessTokenExpirationMs;
+    }
 
     @Value("${cds.app.refreshJwtExpirationMs}")
-    private Long refreshTokenExp;
+    public void setRefreshTokenExpirationMs(Long refreshTokenExpirationMs) {
+        JwtUtils.REFRESH_TOKEN_EXPIRATION_MS = refreshTokenExpirationMs;
+    }
 
     @PostConstruct
     public void initSecretKey() {
-        this.secretKey = Keys.hmacShaKeyFor(this.jwtSecret.getBytes(StandardCharsets.UTF_8));
+        this.secretKey = Keys.hmacShaKeyFor(JWT_SECRET.getBytes(StandardCharsets.UTF_8));
     }
 
     public String generateJWT(Authentication authentication, ETokenType tokenType) {
-        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+        AccountDetails accountDetails = (AccountDetails) authentication.getPrincipal();
 
+        return this.generateJWT(accountDetails, tokenType);
+    }
+
+    public String generateJWT(AccountDetails accountDetails, ETokenType tokenType) {
         Long expiration;
-        if (tokenType == ETokenType.TYPE_ACCESS_TOKEN) expiration = this.accessTokenExp;
-        else expiration = this.refreshTokenExp;
+        if (tokenType == ETokenType.TYPE_ACCESS_TOKEN) expiration = ACCESS_TOKEN_EXPIRATION_MS;
+        else expiration = REFRESH_TOKEN_EXPIRATION_MS;
 
         return Jwts.builder()
-                   .subject(userDetails.getUsername())
                    .claim("tokenType", tokenType)
+                   .claim("uid", accountDetails.getUserId())
+                   .claim("rid", accountDetails.getRoleId())
                    .issuedAt(new Date())
                    .expiration(new Date(new Date().getTime() + expiration))
                    .signWith(this.secretKey)
                    .compact();
+    }
+
+    public String generateAccessToken(Authentication authentication) {
+        return this.generateJWT(authentication, ETokenType.TYPE_ACCESS_TOKEN);
+    }
+
+    public String generateAccessToken(AccountDetails accountDetails) {
+        return this.generateJWT(accountDetails, ETokenType.TYPE_ACCESS_TOKEN);
+    }
+
+    public String generateRefreshToken(Authentication authentication) {
+        return this.generateJWT(authentication, ETokenType.TYPE_REFRESH_TOKEN);
+    }
+
+    public String generateRefreshToken(AccountDetails accountDetails) {
+        return this.generateJWT(accountDetails, ETokenType.TYPE_REFRESH_TOKEN);
     }
 
     public Date getIssuedDateFromJwt(String authToken) {
@@ -52,14 +84,20 @@ public class JwtUtils {
                    .getIssuedAt();
     }
 
-    public String getUsernameFromJwt(String authToken) {
+    public Long getUserIdFromJwt(String authToken) {
         return this.getPayloadFromJwt(authToken)
-                   .getSubject();
+                   .get("uid", Long.class);
+    }
+
+    public Long getRoleIdFromJwt(String authToken) {
+        return this.getPayloadFromJwt(authToken)
+                   .get("rid", Long.class);
     }
 
     public ETokenType getTokenType(String authToken) {
-        return this.getPayloadFromJwt(authToken)
-                   .get("tokenType", ETokenType.class);
+        String name = this.getPayloadFromJwt(authToken)
+                          .get("tokenType", String.class);
+        return ETokenType.valueOf(name);
     }
 
     public Claims getPayloadFromJwt(String authToken) {
@@ -70,10 +108,10 @@ public class JwtUtils {
                    .getPayload();
     }
 
-    public boolean validateJwtToken(String authToken) {
+    public boolean isInvalidJwt(String authToken) {
         try {
             Jwts.parser().verifyWith(this.secretKey).build().parseSignedClaims(authToken);
-            return true;
+            return false;
         } catch (MalformedJwtException e) {
             logger.warning("Invalid JWT token");
         } catch (ExpiredJwtException e) {
@@ -83,6 +121,16 @@ public class JwtUtils {
         } catch (IllegalArgumentException e) {
             logger.warning("JWT claims string is empty");
         }
-        return false;
+        return true;
+    }
+
+    public void validateAccessToken(String access) {
+        if (access == null || this.isInvalidJwt(access) || this.getTokenType(access) != ETokenType.TYPE_ACCESS_TOKEN)
+            throw new UnauthorizedException();
+    }
+
+    public void validateRefreshToken(String refresh) {
+        if (refresh == null || this.isInvalidJwt(refresh) || this.getTokenType(refresh) != ETokenType.TYPE_REFRESH_TOKEN)
+            throw new UnauthorizedException();
     }
 }

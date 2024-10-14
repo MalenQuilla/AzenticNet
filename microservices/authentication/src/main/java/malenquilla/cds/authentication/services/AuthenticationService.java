@@ -1,47 +1,26 @@
 package malenquilla.cds.authentication.services;
 
-import malenquilla.cds.authentication.enums.ETokenType;
-import malenquilla.cds.authentication.utils.JwtUtils;
+import jakarta.servlet.http.HttpServletResponse;
+import malenquilla.cds.authentication.models.AccountDetails;
+import malenquilla.cds.authentication.payloads.requests.LoginRequest;
 import malenquilla.cds.common.exceptions.UnauthorizedException;
-import malenquilla.cds.common.security.UserDetailsImpl;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import malenquilla.cds.grpc.proto.AuthoritiesDetailsGrpc;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.stereotype.Service;
 
 @Service
-public class AuthenticationService {
-    private final JwtUtils jwtUtils;
+public interface AuthenticationService {
+    AccountDetails authenticateHeaderInternal(String accessToken) throws UnauthorizedException;
 
-    private final UserDetailsServiceImpl userDetailsService;
+    AuthoritiesDetailsGrpc authenticateHeaderExternal(String accessToken) throws UnauthorizedException;
 
-    @Autowired
-    public AuthenticationService(
-            JwtUtils jwtUtils,
-            UserDetailsServiceImpl userDetailsService
-    ) {
-        this.jwtUtils = jwtUtils;
-        this.userDetailsService = userDetailsService;
-    }
+    void login(LoginRequest request, HttpServletResponse response) throws AuthenticationException;
 
-    public UsernamePasswordAuthenticationToken validateAuthentication(String authHeader) throws UnauthorizedException {
-        String jwt = parseJwt(authHeader);
-        if (jwt == null || !jwtUtils.validateJwtToken(jwt) || jwtUtils.getTokenType(jwt) == ETokenType.TYPE_REFRESH_TOKEN)
-            throw new UnauthorizedException();
+    void logout(HttpServletResponse response);
 
-        String username = jwtUtils.getUsernameFromJwt(jwt);
+    void requestActivate(Long id);
 
-        UserDetailsImpl userDetails = userDetailsService.loadUserByUsername(username);
-        return new UsernamePasswordAuthenticationToken(
-                userDetails,
-                userDetails.getAccount(),
-                userDetails.getAuthorities()
-        );
-    }
+    void activate(Long id, String activationCode);
 
-    private String parseJwt(String authHeader) {
-        if (authHeader != null && authHeader.startsWith("Bearer ")) {
-            return authHeader.substring(7);
-        }
-        return null;
-    }
+    void refresh(String refreshToken, HttpServletResponse response) throws UnauthorizedException;
 }

@@ -1,40 +1,24 @@
 package malenquilla.cds.authentication.services;
 
-import malenquilla.cds.authentication.dto_mappers.AccountMapper;
-import malenquilla.cds.authentication.enums.EStatus;
-import malenquilla.cds.authentication.models.AccountModel;
-import malenquilla.cds.authentication.repositories.AccountRepository;
-import malenquilla.cds.common.dtos.authentication.AccountDTO;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.crypto.password.PasswordEncoder;
+import malenquilla.cds.authentication.dtos.AccountDTO;
+import malenquilla.cds.common.payloads.requests.PaginationRequest;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
-public class AccountService {
-    private final AccountRepository accountRepository;
-    private final AccountMapper accountMapper;
-    private final PasswordEncoder passwordEncoder;
+public interface AccountService {
+    void createAccount(AccountDTO accountDTO);
 
-    @Autowired
-    public AccountService(
-            AccountRepository accountRepository,
-            AccountMapper accountMapper,
-            PasswordEncoder passwordEncoder
-    ) {
-        this.accountRepository = accountRepository;
-        this.accountMapper = accountMapper;
-        this.passwordEncoder = passwordEncoder;
-    }
+    AccountDTO getByUserId(Long userId);
 
-    public void createAccount(AccountDTO accountDTO) {
-        AccountModel accountModel = this.accountMapper.toModel(accountDTO);
-        accountModel.setPassword(this.passwordEncoder.encode(accountDTO.getPassword()));
-        accountModel.setStatus(EStatus.STATUS_INACTIVE);
+    List<AccountDTO> getAll(PaginationRequest request);
 
-        this.accountRepository.save(accountModel);
-    }
+    void updateAccount(Long userId, AccountDTO accountDTO);
 
-    public void login(AccountDTO accountDTO) {
+    void activateAccount(Long userId);
 
-    }
+    void deactivateAccount(Long userId);
+
+    void restrictAccount(Long userId);
 }

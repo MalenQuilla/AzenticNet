@@ -1,35 +1,36 @@
 package malenquilla.cds.common.configs;
 
-import malenquilla.cds.common.clients.AuthClient;
+import lombok.RequiredArgsConstructor;
+import malenquilla.cds.common.grpc.clients.AuthenticationGrpcClient;
 import malenquilla.cds.common.security.CommonAuthEntryPoint;
 import malenquilla.cds.common.security.CommonAuthTokenFilter;
-import org.springframework.beans.factory.annotation.Autowired;
+import malenquilla.cds.common.security.CommonAuthenticationProvider;
+import malenquilla.cds.common.utils.CookiesUtils;
+import malenquilla.cds.common.utils.RuntimeEnvUtils;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
-@Configuration
-@EnableMethodSecurity
-@EnableWebSecurity
+@RequiredArgsConstructor
 public class CommonWebSecurityConfig {
-    private final AuthClient authClient;
+    private final AuthenticationGrpcClient authenticationGrpcClient;
 
-    @Autowired
-    public CommonWebSecurityConfig(
-            AuthClient authClient
-    ) {
-        this.authClient = authClient;
+    @Bean
+    public RuntimeEnvUtils runtimeEnvUtils() {
+        return new RuntimeEnvUtils();
+    }
+
+    @Bean
+    public CookiesUtils cookiesUtils() {
+        return new CookiesUtils(this.runtimeEnvUtils());
     }
 
     @Bean
     public CommonAuthTokenFilter authTokenFilter() {
-        return new CommonAuthTokenFilter(this.authClient);
+        return new CommonAuthTokenFilter(this.authenticationGrpcClient, this.cookiesUtils());
     }
 
     @Bean
@@ -38,11 +39,18 @@ public class CommonWebSecurityConfig {
     }
 
     @Bean
+    public CommonAuthenticationProvider authenticationProvider() {
+        return new CommonAuthenticationProvider();
+    }
+
+    @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http.csrf(AbstractHttpConfigurer::disable)
             .exceptionHandling(exception -> exception.authenticationEntryPoint(this.authEntryPoint()))
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(authorizeRequests -> authorizeRequests.anyRequest().authenticated());
+
+        http.authenticationProvider(this.authenticationProvider());
 
         http.addFilterBefore(this.authTokenFilter(), UsernamePasswordAuthenticationFilter.class);
 
