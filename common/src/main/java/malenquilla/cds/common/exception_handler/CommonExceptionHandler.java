@@ -4,6 +4,7 @@ import io.grpc.StatusRuntimeException;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
 import malenquilla.cds.common.exceptions.HTTPException;
+import malenquilla.cds.common.grpc.servers.GrpcMethodHandler;
 import malenquilla.cds.common.payloads.response.ExceptionResponse;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
@@ -34,7 +35,16 @@ public class CommonExceptionHandler {
     private ResponseEntity<Object> handleGrpcException(StatusRuntimeException exception, WebRequest request) {
         this.logException(request);
 
-        return this.createExceptionResponseEntity(HttpStatus.INTERNAL_SERVER_ERROR, exception.getStatus().getDescription());
+        HttpStatusCode statusCode = HttpStatus.INTERNAL_SERVER_ERROR;
+
+        for (HttpStatusCode key : GrpcMethodHandler.EXCEPTION_MAP.keySet())
+            if (GrpcMethodHandler.EXCEPTION_MAP.get(key).equals(exception.getStatus())) {
+                statusCode = key;
+                break;
+            }
+
+        return this.createExceptionResponseEntity(statusCode, exception.getStatus()
+                                                                       .getDescription());
     }
 
     @ExceptionHandler(value = MethodArgumentNotValidException.class)
@@ -79,8 +89,9 @@ public class CommonExceptionHandler {
     }
 
     @ExceptionHandler(value = BadCredentialsException.class)
+    @Order(value = Ordered.HIGHEST_PRECEDENCE)
     private ResponseEntity<Object> handleBadCredentialsException(BadCredentialsException exception, WebRequest request) {
-        this. logException(request);
+        this.logException(request);
 
         return this.createExceptionResponseEntity(HttpStatus.BAD_REQUEST, exception.getMessage());
     }
