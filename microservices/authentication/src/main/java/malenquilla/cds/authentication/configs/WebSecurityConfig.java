@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import malenquilla.cds.authentication.services.impl.AccountDetailsServiceImpl;
 import malenquilla.cds.authentication.utils.AuthTokenFilter;
 import malenquilla.cds.authentication.utils.JwtUtils;
+import malenquilla.cds.common.enums.ECookies;
 import malenquilla.cds.common.security.CommonAuthEntryPoint;
 import malenquilla.cds.common.utils.CookiesUtils;
 import malenquilla.cds.common.utils.RuntimeEnvUtils;
@@ -21,6 +22,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.authentication.logout.HttpStatusReturningLogoutSuccessHandler;
 
 @Configuration
 @EnableMethodSecurity
@@ -76,24 +78,27 @@ public class WebSecurityConfig {
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        http.csrf(AbstractHttpConfigurer::disable)
-            .exceptionHandling(exception -> exception.authenticationEntryPoint(this.authEntryPoint()))
-            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-            .authorizeHttpRequests(authorizeRequests ->
-                    authorizeRequests.requestMatchers(
-                                             "/api/v1/auth/login",
-                                             "/api/v1/auth/request-activation/**",
-                                             "/api/v1/auth/logout",
-                                             "/api/v1/auth/refresh"
-                                     )
-                                     .permitAll()
-                                     .anyRequest().authenticated()
-            );
-
-        http.authenticationProvider(this.daoAuthenticationProvider());
-
-        http.addFilterBefore(this.authTokenFilter(), UsernamePasswordAuthenticationFilter.class);
-
-        return http.build();
+        return http.csrf(AbstractHttpConfigurer::disable)
+                   .exceptionHandling(exception -> exception.authenticationEntryPoint(this.authEntryPoint()))
+                   .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                   .authorizeHttpRequests(authorizeRequests ->
+                           authorizeRequests.requestMatchers(
+                                                    "/api/v1/auth/login",
+                                                    "/api/v1/auth/register",
+                                                    "/api/v1/auth/request-activation/**",
+                                                    "/api/v1/auth/refresh"
+                                            )
+                                            .permitAll()
+                                            .anyRequest().authenticated()
+                   )
+                   .logout((logout) -> logout.logoutUrl("/api/v1/auth/logout")
+                                             .permitAll()
+                                             .invalidateHttpSession(true)
+                                             .clearAuthentication(true)
+                                             .deleteCookies(ECookies.REFRESH_TOKEN, ECookies.ACCESS_TOKEN)
+                                             .logoutSuccessHandler(new HttpStatusReturningLogoutSuccessHandler()))
+                   .authenticationProvider(this.daoAuthenticationProvider())
+                   .addFilterBefore(this.authTokenFilter(), UsernamePasswordAuthenticationFilter.class)
+                   .build();
     }
 }

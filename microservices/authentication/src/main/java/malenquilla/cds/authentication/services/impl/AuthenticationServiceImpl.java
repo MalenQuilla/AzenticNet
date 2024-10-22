@@ -80,12 +80,6 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     }
 
     @Override
-    public void logout(HttpServletResponse response) {
-        this.cookiesUtils.deleteAccessCookie(response);
-        this.cookiesUtils.deleteRefreshCookie(response);
-    }
-
-    @Override
     public void requestActivate(Long id) {
 
     }

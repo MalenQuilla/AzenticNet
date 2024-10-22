@@ -45,15 +45,12 @@ public class CommonWebSecurityConfig {
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        http.csrf(AbstractHttpConfigurer::disable)
-            .exceptionHandling(exception -> exception.authenticationEntryPoint(this.authEntryPoint()))
-            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-            .authorizeHttpRequests(authorizeRequests -> authorizeRequests.anyRequest().authenticated());
-
-        http.authenticationProvider(this.authenticationProvider());
-
-        http.addFilterBefore(this.authTokenFilter(), UsernamePasswordAuthenticationFilter.class);
-
-        return http.build();
+        return http.csrf(AbstractHttpConfigurer::disable)
+                   .exceptionHandling(exception -> exception.authenticationEntryPoint(this.authEntryPoint()))
+                   .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                   .authorizeHttpRequests(authorizeRequests -> authorizeRequests.anyRequest().authenticated())
+                   .authenticationProvider(this.authenticationProvider())
+                   .addFilterBefore(this.authTokenFilter(), UsernamePasswordAuthenticationFilter.class)
+                   .build();
     }
 }

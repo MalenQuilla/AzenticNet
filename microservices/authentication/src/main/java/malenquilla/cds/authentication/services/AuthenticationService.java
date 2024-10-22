@@ -16,8 +16,6 @@ public interface AuthenticationService {
 
     void login(LoginRequest request, HttpServletResponse response) throws AuthenticationException;
 
-    void logout(HttpServletResponse response);
-
     void requestActivate(Long id);
 
     void activate(Long id, String activationCode);
