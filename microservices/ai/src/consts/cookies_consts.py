@@ -1,0 +1,1 @@
+ACCESS_TOKEN_COOKIE: str = "acTk"
