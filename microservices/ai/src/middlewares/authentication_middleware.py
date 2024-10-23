@@ -1,5 +1,4 @@
 from kink import inject
-from loguru import logger
 from starlette.requests import Request
 
 from protoc.common_pb2 import AuthoritiesDetailsGrpc

@@ -31,6 +31,10 @@ public class GatewayConfig {
                               route.path("/api/v1/users/**")
                                    .filters(f -> f.filter(this.authenticationFilter()))
                                    .uri("http://localhost:7001"))
+                      .route("ai-service", route ->
+                              route.path("/api/v1/ai/**")
+                                   .filters(f -> f.filter(this.authenticationFilter()))
+                                   .uri("http://localhost:7002"))
                       .build();
     }
 }
