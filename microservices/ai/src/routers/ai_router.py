@@ -1,8 +1,10 @@
 from fastapi import APIRouter
 from starlette.requests import Request
 
+from src.utils import configs_data
+
 ai_router = APIRouter(
-    prefix="/api/v1/ai"
+    prefix=configs_data.get("api.prefix")
 )
 
 
