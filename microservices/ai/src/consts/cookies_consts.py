@@ -1,1 +1,1 @@
-ACCESS_TOKEN_COOKIE: str = "acTk"
+ACCESS_TOKEN_COOKIE: str = "x-acc"
