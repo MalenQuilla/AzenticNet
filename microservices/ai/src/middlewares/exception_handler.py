@@ -18,8 +18,9 @@ async def handle_http_exception(req: Request, ex: HTTPException) -> ORJSONRespon
 
 async def handle_grpc_exception(req: Request, ex: RpcError) -> ORJSONResponse:
     status_code: int = grpc_exceptions_dict.get(ex.code())
-
+    message = ex.details()
+    
     return ORJSONResponse(
         status_code=status_code,
-        content={"statusCode": status_code, "message": ex.details()}
+        content={"statusCode": status_code, "message": message if message else None}
     )

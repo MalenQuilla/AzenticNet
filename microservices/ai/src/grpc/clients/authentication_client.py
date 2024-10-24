@@ -12,7 +12,7 @@ class AuthenticationClient(AbstractClient):
     def __init__(self):
         host = configs_data.get("cds.grpc.authentication.host")
         port = configs_data.get("cds.grpc.authentication.port")
-        super().__init__(f"{host}:{port}")
+        super().__init__(host, port)
         self.__stub = AuthenticationControllerStub(self.get_channel())
 
     async def verify_authentication(self, access_token: str) -> AuthoritiesDetailsGrpc:

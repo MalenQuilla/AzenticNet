@@ -1,6 +1,7 @@
 package malenquilla.cds.common.grpc.clients;
 
 import io.grpc.StatusRuntimeException;
+import malenquilla.cds.common.exceptions.UnauthorizedException;
 import malenquilla.cds.common.security.AuthoritiesAuthentication;
 import malenquilla.cds.grpc.proto.AuthoritiesDetailsGrpc;
 import malenquilla.cds.grpc.proto.authentication.AuthenticationControllerGrpc;
@@ -33,6 +34,9 @@ public class AuthenticationGrpcClient extends AbstractGrpcClient {
     }
 
     public AuthoritiesAuthentication verifyAuthentication(String accessToken) throws StatusRuntimeException {
+        if (accessToken == null || accessToken.isEmpty())
+            throw new UnauthorizedException();
+
         VerifyAuthenticationRequest request = VerifyAuthenticationRequest.newBuilder()
                                                                          .setAccessToken(accessToken)
                                                                          .build();

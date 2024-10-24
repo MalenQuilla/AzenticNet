@@ -37,11 +37,12 @@ public class CommonExceptionHandler {
 
         HttpStatusCode statusCode = HttpStatus.INTERNAL_SERVER_ERROR;
 
-        for (HttpStatusCode key : GrpcMethodHandler.EXCEPTION_MAP.keySet())
-            if (GrpcMethodHandler.EXCEPTION_MAP.get(key).equals(exception.getStatus())) {
+        for (HttpStatusCode key : GrpcMethodHandler.EXCEPTION_MAP.keySet()) {
+            if (GrpcMethodHandler.EXCEPTION_MAP.get(key).getCode().equals(exception.getStatus().getCode())) {
                 statusCode = key;
                 break;
             }
+        }
 
         return this.createExceptionResponseEntity(statusCode, exception.getStatus()
                                                                        .getDescription());

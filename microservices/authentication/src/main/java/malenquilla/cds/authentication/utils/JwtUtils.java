@@ -112,25 +112,22 @@ public class JwtUtils {
         try {
             Jwts.parser().verifyWith(this.secretKey).build().parseSignedClaims(authToken);
             return false;
-        } catch (MalformedJwtException e) {
+        } catch (Exception e) {
             logger.warning("Invalid JWT token");
-        } catch (ExpiredJwtException e) {
-            logger.warning("Expired JWT token");
-        } catch (UnsupportedJwtException e) {
-            logger.warning("Unsupported JWT token");
-        } catch (IllegalArgumentException e) {
-            logger.warning("JWT claims string is empty");
         }
         return true;
     }
 
     public void validateAccessToken(String access) {
-        if (access == null || this.isInvalidJwt(access) || this.getTokenType(access) != ETokenType.TYPE_ACCESS_TOKEN)
+        if (access == null || access.isEmpty() || access.isBlank())
             throw new UnauthorizedException();
+
+        if (this.isInvalidJwt(access) || this.getTokenType(access) != ETokenType.TYPE_ACCESS_TOKEN)
+            throw new UnauthorizedException("Access Denied");
     }
 
     public void validateRefreshToken(String refresh) {
-        if (refresh == null || this.isInvalidJwt(refresh) || this.getTokenType(refresh) != ETokenType.TYPE_REFRESH_TOKEN)
+        if (this.isInvalidJwt(refresh) || this.getTokenType(refresh) != ETokenType.TYPE_REFRESH_TOKEN)
             throw new UnauthorizedException();
     }
 }

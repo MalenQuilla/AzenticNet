@@ -72,8 +72,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         context.setAuthentication(authentication);
         SecurityContextHolder.setContext(context);
 
-        String accessToken = jwtUtils.generateAccessToken(authentication);
-        String refreshToken = jwtUtils.generateRefreshToken(authentication);
+        String accessToken = this.jwtUtils.generateAccessToken(authentication);
+        String refreshToken = this.jwtUtils.generateRefreshToken(authentication);
 
         this.cookiesUtils.addAccessCookie(accessToken, response);
         this.cookiesUtils.addRefreshCookie(refreshToken, response);

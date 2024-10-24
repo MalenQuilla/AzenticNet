@@ -1,6 +1,7 @@
 package malenquilla.cds.authentication.configs;
 
 import lombok.RequiredArgsConstructor;
+import malenquilla.cds.authentication.enums.ApiUrl;
 import malenquilla.cds.authentication.services.impl.AccountDetailsServiceImpl;
 import malenquilla.cds.authentication.utils.AuthTokenFilter;
 import malenquilla.cds.authentication.utils.JwtUtils;
@@ -82,16 +83,10 @@ public class WebSecurityConfig {
                    .exceptionHandling(exception -> exception.authenticationEntryPoint(this.authEntryPoint()))
                    .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                    .authorizeHttpRequests(authorizeRequests ->
-                           authorizeRequests.requestMatchers(
-                                                    "/api/v1/auth/login",
-                                                    "/api/v1/auth/register",
-                                                    "/api/v1/auth/request-activation/**",
-                                                    "/api/v1/auth/refresh"
-                                            )
-                                            .permitAll()
+                           authorizeRequests.requestMatchers(ApiUrl.WHITELIST).permitAll()
                                             .anyRequest().authenticated()
                    )
-                   .logout((logout) -> logout.logoutUrl("/api/v1/auth/logout")
+                   .logout((logout) -> logout.logoutUrl(ApiUrl.LOG_OUT)
                                              .permitAll()
                                              .invalidateHttpSession(true)
                                              .clearAuthentication(true)

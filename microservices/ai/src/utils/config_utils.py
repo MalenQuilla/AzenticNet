@@ -17,7 +17,7 @@ def load_configs():
             response = client.get(url=url)
 
             if response.status_code != 200:
-                raise RuntimeError("Cannot boot server for since not all configs found!")
+                raise RuntimeError("Cannot boot server since not all configs found!")
 
             logger.info(f"Got configs from {url} in Spring Config Server!")
             json = response.json().get("propertySources")[0].get("source")

@@ -4,17 +4,21 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import malenquilla.cds.authentication.enums.ApiUrl;
 import malenquilla.cds.authentication.models.AccountDetails;
 import malenquilla.cds.authentication.services.AuthenticationService;
 import malenquilla.cds.common.utils.CookiesUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.web.filter.OncePerRequestFilter;
+import org.springframework.web.servlet.HandlerExceptionResolver;
 
 import java.io.IOException;
+import java.util.Arrays;
 
 public class AuthTokenFilter extends OncePerRequestFilter {
     // TODO: remove field injection
@@ -22,14 +26,25 @@ public class AuthTokenFilter extends OncePerRequestFilter {
     private AuthenticationService authenticationService;
 
     @Autowired
+    @Qualifier("handlerExceptionResolver")
+    private HandlerExceptionResolver resolver;
+
+    @Autowired
     private CookiesUtils cookiesUtils;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
-        try {
+        if (Arrays.stream(ApiUrl.WHITELIST).noneMatch(request.getRequestURI()::matches)) {
             String accessToken = this.cookiesUtils.getAccessToken(request);
 
-            AccountDetails accountDetails = this.authenticationService.authenticateHeaderInternal(accessToken);
+            AccountDetails accountDetails;
+            try {
+                accountDetails = this.authenticationService.authenticateHeaderInternal(accessToken);
+            } catch (Exception e) {
+                resolver.resolveException(request, response, null, e);
+                return;
+            }
+
             UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
                     accountDetails,
                     null,
@@ -40,7 +55,6 @@ public class AuthTokenFilter extends OncePerRequestFilter {
             SecurityContext context = SecurityContextHolder.createEmptyContext();
             context.setAuthentication(authentication);
             SecurityContextHolder.setContext(context);
-        } catch (Exception ignored) {
         }
 
         filterChain.doFilter(request, response);
