@@ -7,7 +7,7 @@ from py_eureka_client import eureka_client
 from src.configs.grpc.grpc_clients_config import init_grpc_clients_dependencies
 from src.configs.middleware_config import init_middlewares_dependencies
 from src.middlewares import exception_handlers
-from src.routers import private_routers
+from src.routers import private_routers, public_routers
 from src.utils import configs_data
 
 
@@ -38,3 +38,4 @@ app = FastAPI(
 )
 
 app.include_router(private_routers)
+app.include_router(public_routers)

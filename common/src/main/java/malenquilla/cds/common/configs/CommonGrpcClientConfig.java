@@ -7,7 +7,7 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class CommonGrpcClientConfig {
     @Bean
-    public AuthenticationGrpcClient authenticationGrpcClient() {
-        return new AuthenticationGrpcClient();
+    public AuthenticationGrpcClient authenticationGrpcClient(CommonValuesConfig commonValuesConfig) {
+        return new AuthenticationGrpcClient(commonValuesConfig);
     }
 }

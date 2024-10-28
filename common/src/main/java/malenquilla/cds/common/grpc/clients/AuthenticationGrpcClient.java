@@ -1,35 +1,28 @@
 package malenquilla.cds.common.grpc.clients;
 
 import io.grpc.StatusRuntimeException;
+import lombok.RequiredArgsConstructor;
+import malenquilla.cds.common.configs.CommonValuesConfig;
 import malenquilla.cds.common.exceptions.UnauthorizedException;
 import malenquilla.cds.common.security.AuthoritiesAuthentication;
 import malenquilla.cds.grpc.proto.AuthoritiesDetailsGrpc;
 import malenquilla.cds.grpc.proto.authentication.AuthenticationControllerGrpc;
 import malenquilla.cds.grpc.proto.authentication.VerifyAuthenticationRequest;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
 import java.util.stream.Collectors;
 
+@RequiredArgsConstructor
 public class AuthenticationGrpcClient extends AbstractGrpcClient {
-    private static String HOST;
-    private static int PORT;
-
-    @Value("${cds.grpc.authentication.host}")
-    public void setHost(String host) {
-        AuthenticationGrpcClient.HOST = host;
-    }
-
-    @Value("${cds.grpc.authentication.port}")
-    public void setPort(int port) {
-        AuthenticationGrpcClient.PORT = port;
-    }
+    private final CommonValuesConfig commonValuesConfig;
 
     AuthenticationControllerGrpc.AuthenticationControllerBlockingStub blockingStub;
 
     @Override
     public void initStub() {
-        this.blockingStub = AuthenticationControllerGrpc.newBlockingStub(this.initChanel(HOST, PORT)
+        this.blockingStub = AuthenticationControllerGrpc.newBlockingStub(this.initChanel(
+                                                                                     this.commonValuesConfig.getGrpcAuthHost(),
+                                                                                     this.commonValuesConfig.getGrpcAuthPort())
                                                                              .getChannel());
     }
 

@@ -4,7 +4,7 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import malenquilla.cds.authentication.enums.ApiUrl;
+import malenquilla.cds.authentication.configs.ValuesConfig;
 import malenquilla.cds.authentication.models.AccountDetails;
 import malenquilla.cds.authentication.services.AuthenticationService;
 import malenquilla.cds.common.utils.CookiesUtils;
@@ -32,9 +32,12 @@ public class AuthTokenFilter extends OncePerRequestFilter {
     @Autowired
     private CookiesUtils cookiesUtils;
 
+    @Autowired
+    private ValuesConfig valuesConfig;
+
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
-        if (Arrays.stream(ApiUrl.WHITELIST).noneMatch(request.getRequestURI()::matches)) {
+        if (Arrays.stream(this.valuesConfig.getWhitelist()).noneMatch(request.getRequestURI()::matches)) {
             String accessToken = this.cookiesUtils.getAccessToken(request);
 
             AccountDetails accountDetails;

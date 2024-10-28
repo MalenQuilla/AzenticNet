@@ -4,6 +4,7 @@ import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import malenquilla.cds.common.configs.CommonValuesConfig;
 import malenquilla.cds.common.enums.ECookies;
 
 import java.util.Arrays;
@@ -11,7 +12,7 @@ import java.util.Objects;
 
 @RequiredArgsConstructor
 public class CookiesUtils {
-    private final RuntimeEnvUtils runtimeEnvUtils;
+    private final CommonValuesConfig commonValuesConfig;
 
     public Cookie createCookie(String name, String attribute, int age) {
         Cookie cookie = new Cookie(name, attribute);
@@ -20,7 +21,7 @@ public class CookiesUtils {
         cookie.setHttpOnly(true);
         cookie.setPath("/");
 
-        boolean isSecure = !this.runtimeEnvUtils.isDevelop();
+        boolean isSecure = this.commonValuesConfig.isDevelop();
         cookie.setSecure(isSecure);
 
         return cookie;
