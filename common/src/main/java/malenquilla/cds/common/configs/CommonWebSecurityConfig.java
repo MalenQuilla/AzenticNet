@@ -5,7 +5,6 @@ import malenquilla.cds.common.security.CommonAuthEntryPoint;
 import malenquilla.cds.common.security.CommonAuthTokenFilter;
 import malenquilla.cds.common.security.CommonAuthenticationProvider;
 import malenquilla.cds.common.utils.CookiesUtils;
-import malenquilla.cds.common.utils.RuntimeEnvUtils;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -13,29 +12,28 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.authentication.logout.HttpStatusReturningLogoutSuccessHandler;
 import org.springframework.web.servlet.HandlerExceptionResolver;
 
 
 public class CommonWebSecurityConfig {
     private final AuthenticationGrpcClient authenticationGrpcClient;
     private final HandlerExceptionResolver resolver;
+    private final CommonValuesConfig commonValuesConfig;
 
     public CommonWebSecurityConfig(
             AuthenticationGrpcClient authenticationGrpcClient,
-            @Qualifier("handlerExceptionResolver") HandlerExceptionResolver resolver
+            @Qualifier("handlerExceptionResolver") HandlerExceptionResolver resolver,
+            CommonValuesConfig commonValuesConfig
     ) {
         this.authenticationGrpcClient = authenticationGrpcClient;
         this.resolver = resolver;
-    }
-
-    @Bean
-    public RuntimeEnvUtils runtimeEnvUtils() {
-        return new RuntimeEnvUtils();
+        this.commonValuesConfig = commonValuesConfig;
     }
 
     @Bean
     public CookiesUtils cookiesUtils() {
-        return new CookiesUtils(this.runtimeEnvUtils());
+        return new CookiesUtils(this.commonValuesConfig);
     }
 
     @Bean
@@ -59,6 +57,11 @@ public class CommonWebSecurityConfig {
                    .exceptionHandling(exception -> exception.authenticationEntryPoint(this.authEntryPoint()))
                    .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                    .authorizeHttpRequests(authorizeRequests -> authorizeRequests.anyRequest().authenticated())
+                   .logout((logout) -> logout.logoutUrl(this.commonValuesConfig.getLogoutUri())
+                                             .permitAll()
+                                             .invalidateHttpSession(true)
+                                             .clearAuthentication(true)
+                                             .logoutSuccessHandler(new HttpStatusReturningLogoutSuccessHandler()))
                    .authenticationProvider(this.authenticationProvider())
                    .addFilterBefore(this.authTokenFilter(), UsernamePasswordAuthenticationFilter.class)
                    .build();

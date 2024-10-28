@@ -1,14 +1,13 @@
 package malenquilla.cds.authentication.configs;
 
 import lombok.RequiredArgsConstructor;
-import malenquilla.cds.authentication.enums.ApiUrl;
 import malenquilla.cds.authentication.services.impl.AccountDetailsServiceImpl;
 import malenquilla.cds.authentication.utils.AuthTokenFilter;
 import malenquilla.cds.authentication.utils.JwtUtils;
+import malenquilla.cds.common.configs.CommonValuesConfig;
 import malenquilla.cds.common.enums.ECookies;
 import malenquilla.cds.common.security.CommonAuthEntryPoint;
 import malenquilla.cds.common.utils.CookiesUtils;
-import malenquilla.cds.common.utils.RuntimeEnvUtils;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -31,15 +30,12 @@ import org.springframework.security.web.authentication.logout.HttpStatusReturnin
 @RequiredArgsConstructor
 public class WebSecurityConfig {
     private final AccountDetailsServiceImpl accountDetailsServiceImpl;
-
-    @Bean
-    public RuntimeEnvUtils runtimeEnvUtils() {
-        return new RuntimeEnvUtils();
-    }
+    private final ValuesConfig valuesConfig;
+    private final CommonValuesConfig commonValuesConfig;
 
     @Bean
     public CookiesUtils cookiesUtils() {
-        return new CookiesUtils(this.runtimeEnvUtils());
+        return new CookiesUtils(this.commonValuesConfig);
     }
 
     @Bean
@@ -48,8 +44,8 @@ public class WebSecurityConfig {
     }
 
     @Bean
-    public JwtUtils jwtUtils() {
-        return new JwtUtils();
+    public JwtUtils jwtUtils(ValuesConfig valuesConfig) {
+        return new JwtUtils(valuesConfig);
     }
 
     @Bean
@@ -83,10 +79,10 @@ public class WebSecurityConfig {
                    .exceptionHandling(exception -> exception.authenticationEntryPoint(this.authEntryPoint()))
                    .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                    .authorizeHttpRequests(authorizeRequests ->
-                           authorizeRequests.requestMatchers(ApiUrl.WHITELIST).permitAll()
+                           authorizeRequests.requestMatchers(this.valuesConfig.getWhitelist()).permitAll()
                                             .anyRequest().authenticated()
                    )
-                   .logout((logout) -> logout.logoutUrl(ApiUrl.LOG_OUT)
+                   .logout((logout) -> logout.logoutUrl(this.commonValuesConfig.getLogoutUri())
                                              .permitAll()
                                              .invalidateHttpSession(true)
                                              .clearAuthentication(true)
