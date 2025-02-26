@@ -8,17 +8,17 @@ import java.util.List;
 
 @Service
 public interface AccountService {
-    void createAccount(AccountDTO accountDTO);
+    void create(AccountDTO accountDTO);
 
     AccountDTO getByUserId(Long userId);
 
     List<AccountDTO> getAll(PaginationRequest request);
 
-    void updateAccount(Long userId, AccountDTO accountDTO);
+    void updateByUserId(Long userId, AccountDTO accountDTO);
 
-    void activateAccount(Long userId);
+    void activate(Long userId);
 
-    void deactivateAccount(Long userId);
+    void deactivate(Long userId);
 
-    void restrictAccount(Long userId);
+    void restrict(Long userId);
 }

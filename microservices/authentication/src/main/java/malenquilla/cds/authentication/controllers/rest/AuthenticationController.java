@@ -24,7 +24,7 @@ public class AuthenticationController {
 
     @PostMapping("/register")
     public void register(@Validated @RequestBody AccountDTO accountDTO) {
-        this.accountService.createAccount(accountDTO);
+        this.accountService.create(accountDTO);
     }
 
     @GetMapping("/request-activation/{id}")
@@ -38,10 +38,9 @@ public class AuthenticationController {
     }
 
     @PostMapping("/refresh")
-    public void refreshAuthentication(
+    public void refresh(
             @CookieValue(value = ECookies.REFRESH_TOKEN, required = false) String cookie,
-            HttpServletResponse response
-    ) {
+            HttpServletResponse response) {
         this.authenticationService.refresh(cookie, response);
     }
 }
