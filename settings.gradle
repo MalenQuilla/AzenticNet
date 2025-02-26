@@ -1,4 +1,4 @@
-rootProject.name = 'CheatingDetectionSystem'
+rootProject.name = 'AzenticNet'
 include ':cloud:eureka'
 include ':cloud:gateway'
 include ':cloud:config'
