@@ -1,7 +1,7 @@
 package malenquilla.cds.gateway.security;
 
 
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
@@ -24,6 +24,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
+@RequiredArgsConstructor
 public class BroadcastFilter implements GatewayFilter {
     private final WebClient.Builder webClientBuilder;
     private final DiscoveryClient discoveryClient;
@@ -35,15 +36,6 @@ public class BroadcastFilter implements GatewayFilter {
     private void setExcludedPorts(String excludedPorts) {
         EXCLUDED_SERVICES = Arrays.stream(excludedPorts.split(","))
                                   .toList();
-    }
-
-    @Autowired
-    public BroadcastFilter(
-            WebClient.Builder webClientBuilder,
-            DiscoveryClient discoveryClient
-    ) {
-        this.webClientBuilder = webClientBuilder;
-        this.discoveryClient = discoveryClient;
     }
 
     public BroadcastFilter withDefaults() {
@@ -60,7 +52,8 @@ public class BroadcastFilter implements GatewayFilter {
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
         List<String> serviceIds = this.discoveryClient.getServices()
                                                       .stream()
-                                                      .filter(s -> !(EXCLUDED_SERVICES.contains(s) || extraExcluded.contains(s)))
+                                                      .filter(s -> !(EXCLUDED_SERVICES.contains(s)
+                                                              || extraExcluded.contains(s)))
                                                       .toList();
 
         List<ServiceInstance> serviceInstances = serviceIds.stream()
@@ -91,7 +84,7 @@ public class BroadcastFilter implements GatewayFilter {
             MultiValueMap<String, String> cookieMap,
             HttpHeaders headers,
             Flux<DataBuffer> body
-    ) {
+                                     ) {
         return this.webClientBuilder.build()
                                     .post()
                                     .uri(String.format("%s%s", serviceUri, requestPath))

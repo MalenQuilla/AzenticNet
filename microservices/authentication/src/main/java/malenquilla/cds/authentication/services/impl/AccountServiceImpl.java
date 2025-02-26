@@ -29,7 +29,7 @@ public class AccountServiceImpl implements AccountService {
     private final RoleRepository roleRepository;
 
     @Override
-    public void createAccount(AccountDTO accountDTO) {
+    public void create(AccountDTO accountDTO) {
         AccountModel accountModel = this.accountMapper.toModel(accountDTO);
         accountModel.setPassword(this.passwordEncoder.encode(accountDTO.getPassword()));
         accountModel.setStatus(EStatus.STATUS_INACTIVE);
@@ -59,7 +59,7 @@ public class AccountServiceImpl implements AccountService {
     }
 
     @Override
-    public void updateAccount(Long userId, AccountDTO accountDTO) {
+    public void updateByUserId(Long userId, AccountDTO accountDTO) {
         AccountModel accountModel = this.accountRepository.getByUserId(userId)
                                                           .orElseThrow(NotFoundException::new);
         accountModel.setUsername(accountDTO.getUsername());
@@ -81,17 +81,17 @@ public class AccountServiceImpl implements AccountService {
     }
 
     @Override
-    public void activateAccount(Long userId) {
+    public void activate(Long userId) {
         this.setStatusByUserId(userId, EStatus.STATUS_ACTIVE);
     }
 
     @Override
-    public void deactivateAccount(Long userId) {
+    public void deactivate(Long userId) {
         this.setStatusByUserId(userId, EStatus.STATUS_INACTIVE);
     }
 
     @Override
-    public void restrictAccount(Long userId) {
+    public void restrict(Long userId) {
         this.setStatusByUserId(userId, EStatus.STATUS_RESTRICTED);
     }
 }
