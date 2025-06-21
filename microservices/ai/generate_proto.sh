@@ -11,7 +11,7 @@ cp -r $PROTO_SRC $PROJECT_ROOT
 [ ! -d "$PROTO_OUT_PATH"  ] && mkdir "$PROTO_OUT_PATH"
 
 find $PROTO_PATH -name "*.proto" | while read -r PROTO_FILE; do
-    python3.13 -m grpc_tools.protoc \
+    python3 -m grpc_tools.protoc \
     --proto_path=./$PROTO_PATH \
     --python_out=./$PROTO_OUT_PATH \
     --pyi_out=./$PROTO_OUT_PATH \
@@ -20,6 +20,7 @@ find $PROTO_PATH -name "*.proto" | while read -r PROTO_FILE; do
 
     PROTO_DIR="$PROTO_OUT_PATH"/$(dirname "${PROTO_FILE#"$PROTO_PATH"}")
     if [[ ! -e /"$PROTO_DIR"/__init__.py ]]; then
+      mkdir -p "$PROTO_DIR"
       touch "$PROTO_DIR"/__init__.py
       echo "import os, sys
 
