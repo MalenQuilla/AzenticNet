@@ -11,10 +11,10 @@ import java.util.Map;
 @FunctionalInterface
 public interface GrpcMethodHandler {
     Map<HttpStatusCode, Status> EXCEPTION_MAP = Map.of(
-            HttpStatus.BAD_REQUEST, Status.ABORTED,
-            HttpStatus.NOT_FOUND, Status.NOT_FOUND,
-            HttpStatus.UNAUTHORIZED, Status.UNAUTHENTICATED,
-            HttpStatus.FORBIDDEN, Status.PERMISSION_DENIED
+        HttpStatus.BAD_REQUEST, Status.ABORTED,
+        HttpStatus.NOT_FOUND, Status.NOT_FOUND,
+        HttpStatus.UNAUTHORIZED, Status.UNAUTHENTICATED,
+        HttpStatus.FORBIDDEN, Status.PERMISSION_DENIED
     );
 
     void process() throws RuntimeException;
@@ -28,7 +28,7 @@ public interface GrpcMethodHandler {
 
             if (exception instanceof HTTPException)
                 status = EXCEPTION_MAP.get(((HTTPException) exception).getStatusCode())
-                                      .withDescription(exception.getMessage());
+                    .withDescription(exception.getMessage());
 
             responseObserver.onError(status.asRuntimeException());
         }

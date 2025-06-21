@@ -1,8 +1,8 @@
 package malenquilla.cds.common.grpc.servers;
 
-import io.grpc.BindableService;
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
+import io.grpc.ServerServiceDefinition;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import lombok.RequiredArgsConstructor;
@@ -14,11 +14,11 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
 @RequiredArgsConstructor
-public class GrpcServer {
+public class GrpcServer extends Server {
     private static int PORT;
     private final static Logger logger = Logger.getLogger(GrpcServer.class.getName());
 
-    private final List<BindableService> controllers;
+    private final List<ServerServiceDefinition> controllers;
 
     private Server server;
     private boolean isRunning = false;
@@ -30,62 +30,94 @@ public class GrpcServer {
 
     @PostConstruct
     private void buildAndStart() {
-        ServerBuilder<?> serverBuilder = ServerBuilder.forPort(PORT);
-        controllers.forEach(serverBuilder::addService);
-        this.server = serverBuilder.build();
+        this.server = ServerBuilder.forPort(PORT)
+                                   .addServices(controllers)
+                                   .intercept(new GrpcServerExceptionInterceptor())
+                                   .build();
 
         this.start();
     }
 
     @PreDestroy
-    public void destroy() throws InterruptedException {
+    public void destroy() {
         this.shutdown();
     }
 
-    private void start() {
-        if (this.isRunning)
-            return;
+    @Override
+    public GrpcServer start() {
+        if (this.isRunning) return this;
 
         this.isRunning = true;
         try {
             this.server.start();
 
-            logger.info("Grpc server initialized on port " + this.getPort() + ". Number of controllers: " + this.getControllersCount());
+            logger.info(String.format(
+                "Server started on port %d. Number of controllers: %d", this.getPort(), this.getControllersCount()));
         } catch (IOException exception) {
             this.isRunning = false;
 
             logger.warning("Grpc server initialized failed");
         }
+
+        return this;
     }
 
     public long getControllersCount() {
-        return this.server.getServices().size();
+        return this.server.getServices()
+                          .size();
     }
 
-    public long getPort() {
+    @Override
+    public int getPort() {
         return this.server.getPort();
     }
 
-    public void shutdown() throws InterruptedException {
-        if (!this.isRunning)
-            return;
+    @Override
+    public GrpcServer shutdown() {
+        if (!this.isRunning) return this;
 
         this.isRunning = false;
         this.server.shutdown();
-        this.server.awaitTermination(2, TimeUnit.MINUTES);
-        this.server.shutdownNow();
+
+        try {
+            this.server.awaitTermination(2, TimeUnit.MINUTES);
+        } catch (InterruptedException exception) {
+            logger.warning("Grpc server await termination failed, force shutdown now");
+            this.server.shutdownNow();
+        }
 
         logger.info("Grpc server shutting down...");
+
+        return this;
     }
 
-    public void restart() throws InterruptedException {
-        if (this.isRunning)
-            this.shutdown();
-
-        this.start();
+    @Override
+    public Server shutdownNow() {
+        return this.server.shutdownNow();
     }
 
+    @Override
+    public boolean isShutdown() {
+        return this.server.isShutdown();
+    }
+
+    public void restart() {
+        this.shutdown()
+            .start();
+    }
+
+    @Override
     public boolean isTerminated() {
         return !this.isRunning;
+    }
+
+    @Override
+    public boolean awaitTermination(long timeout, TimeUnit unit) throws InterruptedException {
+        return this.server.awaitTermination(timeout, unit);
+    }
+
+    @Override
+    public void awaitTermination() throws InterruptedException {
+        this.server.awaitTermination();
     }
 }

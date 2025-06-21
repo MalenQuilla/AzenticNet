@@ -1,6 +1,6 @@
 package malenquilla.cds.authentication.configs.grpc;
 
-import io.grpc.BindableService;
+import io.grpc.ServerServiceDefinition;
 import lombok.RequiredArgsConstructor;
 import malenquilla.cds.authentication.controllers.grpc.AuthenticationControllerGrpcImpl;
 import malenquilla.cds.common.grpc.servers.GrpcServer;
@@ -20,8 +20,8 @@ public class GrpcServerConfig {
 
     @Bean
     public GrpcServer grpcServer() {
-        List<BindableService> controllers = new ArrayList<>();
-        controllers.add(this.authenticationControllerGrpc);
+        List<ServerServiceDefinition> controllers = new ArrayList<>();
+        controllers.add(this.authenticationControllerGrpc.bindService());
 
         return new GrpcServer(controllers);
     }

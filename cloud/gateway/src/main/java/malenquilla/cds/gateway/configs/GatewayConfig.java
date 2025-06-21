@@ -1,8 +1,9 @@
 package malenquilla.cds.gateway.configs;
 
 
-import malenquilla.cds.gateway.security.AuthenticationFilter;
-import malenquilla.cds.gateway.security.BroadcastFilter;
+import malenquilla.cds.gateway.filters.BroadcastFilter;
+import malenquilla.cds.gateway.filters.ReactivePolicyEnforcerFilter;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.cloud.gateway.route.RouteLocator;
@@ -17,14 +18,15 @@ import org.springframework.web.reactive.function.client.WebClient;
 public class GatewayConfig {
     private final DiscoveryClient discoveryClient;
 
+    @Autowired
     public GatewayConfig(DiscoveryClient discoveryClient) {
         this.discoveryClient = discoveryClient;
     }
 
     @Bean
     @RefreshScope
-    public AuthenticationFilter authenticationFilter() {
-        return new AuthenticationFilter();
+    public ReactivePolicyEnforcerFilter authenticationFilter() {
+        return new ReactivePolicyEnforcerFilter();
     }
 
     @Bean
@@ -41,30 +43,35 @@ public class GatewayConfig {
     public RouteLocator routes(RouteLocatorBuilder builder) {
         return builder.routes()
                       .route("auth-service", route ->
-                              route.path(
-                                           "/api/v1/accounts/**",
-                                           "/api/v1/roles/**",
-                                           "/api/v1/auth/**")
-                                   .filters(f -> f.filter(this.authenticationFilter()))
-                                   .uri("lb://authentication"))
+                          route.path(
+                                   "/api/v1/accounts/**",
+                                   "/api/v1/roles/**",
+                                   "/api/v1/auth/**"
+                               )
+                               .filters(f -> f.filter(this.authenticationFilter()))
+                               .uri("lb://authentication")
+                      )
 
                       .route("user-service", route ->
-                              route.path("/api/v1/users/**")
-                                   .filters(f -> f.filter(this.authenticationFilter()))
-                                   .uri("lb://user"))
+                          route.path("/api/v1/users/**")
+                               .filters(f -> f.filter(this.authenticationFilter()))
+                               .uri("lb://user")
+                      )
 
                       .route("ai-service", route ->
-                              route.path("/api/v1/ai/**")
-                                   .filters(f -> f.filter(this.authenticationFilter()))
-                                   .uri("lb://ai"))
+                          route.path("/api/v1/ai/**")
+                               .filters(f -> f.filter(this.authenticationFilter()))
+                               .uri("lb://ai")
+                      )
 
                       .route("logout", route ->
-                              route.path("/api/v1/logout")
-                                   .filters(f -> f.filter(this.broadcastFilter()
-                                                              .withDefaults()
-                                                              .excludes("authentication"))
-                                   )
-                                   .uri("lb://authentication"))
+                          route.path("/api/v1/logout")
+                               .filters(f -> f.filter(this.broadcastFilter()
+                                                          .withDefaults()
+                                                          .excludes("authentication"))
+                               )
+                               .uri("lb://authentication")
+                      )
 
                       .build();
     }

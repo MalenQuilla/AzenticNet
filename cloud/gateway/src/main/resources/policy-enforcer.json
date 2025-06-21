@@ -1,0 +1,19 @@
+{
+  "realm": "demo",
+  "auth-server-url": "http://localhost:8080",
+  "resource": "demo-client",
+  "credentials": {
+    "secret": "wL8ovUKs5NzmS7LemObz8IdeAlz36bsG"
+  },
+  "http-method-as-scope": true,
+  "paths": [
+    {
+      "path": "/swagger-ui/*",
+      "enforcement-mode": "DISABLED"
+    },
+    {
+      "path": "/v3/api-docs/*",
+      "enforcement-mode": "DISABLED"
+    }
+  ]
+}

@@ -1,7 +1,7 @@
-package malenquilla.cds.gateway.security;
+package malenquilla.cds.gateway.filters;
 
 
-import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
@@ -24,10 +24,15 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
-@RequiredArgsConstructor
 public class BroadcastFilter implements GatewayFilter {
     private final WebClient.Builder webClientBuilder;
     private final DiscoveryClient discoveryClient;
+
+    @Autowired
+    public BroadcastFilter(WebClient.Builder webClientBuilder, DiscoveryClient discoveryClient) {
+        this.webClientBuilder = webClientBuilder;
+        this.discoveryClient = discoveryClient;
+    }
 
     private static List<String> EXCLUDED_SERVICES;
     private final List<String> extraExcluded = new ArrayList<>();
@@ -50,41 +55,41 @@ public class BroadcastFilter implements GatewayFilter {
 
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
-        List<String> serviceIds = this.discoveryClient.getServices()
-                                                      .stream()
-                                                      .filter(s -> !(EXCLUDED_SERVICES.contains(s)
-                                                              || extraExcluded.contains(s)))
-                                                      .toList();
-
-        List<ServiceInstance> serviceInstances = serviceIds.stream()
-                                                           .map(this.discoveryClient::getInstances)
-                                                           .flatMap(Collection::stream)
-                                                           .toList();
-
-        List<URI> uris = serviceInstances.stream()
-                                         .map(ServiceInstance::getUri)
-                                         .toList();
+        List<URI> uris = this.discoveryClient.getServices()
+                                             .stream()
+                                             .filter(s -> !(EXCLUDED_SERVICES.contains(s) || extraExcluded.contains(s)))
+                                             .map(this.discoveryClient::getInstances)
+                                             .flatMap(Collection::stream)
+                                             .map(ServiceInstance::getUri)
+                                             .toList();
 
         MultiValueMap<String, String> cookies = new LinkedMultiValueMap<>();
-        exchange.getRequest().getCookies().forEach(((s, httpCookies) -> cookies.add(s, httpCookies.toString())));
+        exchange.getRequest()
+                .getCookies()
+                .forEach(((s, httpCookies) -> cookies.add(s, httpCookies.toString())));
 
-        RequestPath requestPath = exchange.getRequest().getPath();
-        HttpHeaders headers = exchange.getRequest().getHeaders();
-        Flux<DataBuffer> body = exchange.getRequest().getBody().cache();
+        RequestPath requestPath = exchange.getRequest()
+                                          .getPath();
+        HttpHeaders headers = exchange.getRequest()
+                                      .getHeaders();
+        Flux<DataBuffer> body = exchange.getRequest()
+                                        .getBody()
+                                        .cache();
 
-        return Mono.when(uris.stream()
+        return Mono.when(uris.parallelStream()
                              .map((uri) -> this.forwardRequest(uri, requestPath, cookies, headers, body))
                              .toList())
-                   .then(chain.filter(exchange));
+                   .then(chain.filter(exchange))
+                   .onErrorComplete();
     }
 
     private Mono<Void> forwardRequest(
-            URI serviceUri,
-            RequestPath requestPath,
-            MultiValueMap<String, String> cookieMap,
-            HttpHeaders headers,
-            Flux<DataBuffer> body
-                                     ) {
+        URI serviceUri,
+        RequestPath requestPath,
+        MultiValueMap<String, String> cookieMap,
+        HttpHeaders headers,
+        Flux<DataBuffer> body
+    ) {
         return this.webClientBuilder.build()
                                     .post()
                                     .uri(String.format("%s%s", serviceUri, requestPath))

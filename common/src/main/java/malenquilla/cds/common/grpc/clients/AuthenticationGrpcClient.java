@@ -20,15 +20,13 @@ public class AuthenticationGrpcClient extends AbstractGrpcClient {
 
     @Override
     public void initStub() {
-        this.blockingStub = AuthenticationControllerGrpc.newBlockingStub(this.initChanel(
-                                                                                     this.commonValuesConfig.getGrpcAuthHost(),
-                                                                                     this.commonValuesConfig.getGrpcAuthPort())
-                                                                             .getChannel());
+        this.blockingStub = AuthenticationControllerGrpc.newBlockingStub(
+            this.initChanel(this.commonValuesConfig.getGrpcAuthHost(), this.commonValuesConfig.getGrpcAuthPort())
+                .getChannel());
     }
 
     public AuthoritiesAuthentication verifyAuthentication(String accessToken) throws StatusRuntimeException {
-        if (accessToken == null || accessToken.isEmpty())
-            throw new UnauthorizedException();
+        if (accessToken == null || accessToken.isEmpty()) throw new UnauthorizedException();
 
         VerifyAuthenticationRequest request = VerifyAuthenticationRequest.newBuilder()
                                                                          .setAccessToken(accessToken)
@@ -36,11 +34,10 @@ public class AuthenticationGrpcClient extends AbstractGrpcClient {
         AuthoritiesDetailsGrpc authoritiesDetails = this.blockingStub.verifyAuthentication(request);
 
         return new AuthoritiesAuthentication(
-                authoritiesDetails.getUserId(),
-                authoritiesDetails.getAuthoritiesList()
-                                  .stream()
-                                  .map(SimpleGrantedAuthority::new)
-                                  .collect(Collectors.toSet())
+            authoritiesDetails.getUserId(), authoritiesDetails.getAuthoritiesList()
+                                                              .stream()
+                                                              .map(SimpleGrantedAuthority::new)
+                                                              .collect(Collectors.toSet())
         );
     }
 }

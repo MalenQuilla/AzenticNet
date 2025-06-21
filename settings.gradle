@@ -1,8 +1,21 @@
-rootProject.name = 'CheatingDetectionSystem'
+rootProject.name = 'AzenticNet'
+
+// Cloud services
 include ':cloud:eureka'
 include ':cloud:gateway'
 include ':cloud:config'
 
+// Common module
 include ':common'
+
+// Microservices
 include ':microservices:authentication'
 include ':microservices:user'
+
+// Set project directories
+project(':cloud:eureka').projectDir = file('cloud/eureka')
+project(':cloud:gateway').projectDir = file('cloud/gateway')
+project(':cloud:config').projectDir = file('cloud/config')
+project(':common').projectDir = file('common')
+project(':microservices:authentication').projectDir = file('microservices/authentication')
+project(':microservices:user').projectDir = file('microservices/user')

@@ -3,6 +3,7 @@ package malenquilla.cds.authentication.controllers.rest;
 import lombok.RequiredArgsConstructor;
 import malenquilla.cds.authentication.dtos.AccountDTO;
 import malenquilla.cds.authentication.services.AccountService;
+import malenquilla.cds.authentication.services.impl.AccountServiceImpl;
 import malenquilla.cds.common.payloads.requests.PaginationRequest;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
