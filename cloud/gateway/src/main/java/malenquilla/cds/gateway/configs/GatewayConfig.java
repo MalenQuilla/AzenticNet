@@ -41,30 +41,35 @@ public class GatewayConfig {
     public RouteLocator routes(RouteLocatorBuilder builder) {
         return builder.routes()
                       .route("auth-service", route ->
-                              route.path(
-                                           "/api/v1/accounts/**",
-                                           "/api/v1/roles/**",
-                                           "/api/v1/auth/**")
-                                   .filters(f -> f.filter(this.authenticationFilter()))
-                                   .uri("lb://authentication"))
+                          route.path(
+                                   "/api/v1/accounts/**",
+                                   "/api/v1/roles/**",
+                                   "/api/v1/auth/**"
+                               )
+                               .filters(f -> f.filter(this.authenticationFilter()))
+                               .uri("lb://authentication")
+                      )
 
                       .route("user-service", route ->
-                              route.path("/api/v1/users/**")
-                                   .filters(f -> f.filter(this.authenticationFilter()))
-                                   .uri("lb://user"))
+                          route.path("/api/v1/users/**")
+                               .filters(f -> f.filter(this.authenticationFilter()))
+                               .uri("lb://user")
+                      )
 
                       .route("ai-service", route ->
-                              route.path("/api/v1/ai/**")
-                                   .filters(f -> f.filter(this.authenticationFilter()))
-                                   .uri("lb://ai"))
+                          route.path("/api/v1/ai/**")
+                               .filters(f -> f.filter(this.authenticationFilter()))
+                               .uri("lb://ai")
+                      )
 
                       .route("logout", route ->
-                              route.path("/api/v1/logout")
-                                   .filters(f -> f.filter(this.broadcastFilter()
-                                                              .withDefaults()
-                                                              .excludes("authentication"))
-                                   )
-                                   .uri("lb://authentication"))
+                          route.path("/api/v1/logout")
+                               .filters(f -> f.filter(this.broadcastFilter()
+                                                          .withDefaults()
+                                                          .excludes("authentication"))
+                               )
+                               .uri("lb://authentication")
+                      )
 
                       .build();
     }

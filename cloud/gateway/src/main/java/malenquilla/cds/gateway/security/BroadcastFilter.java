@@ -1,7 +1,6 @@
 package malenquilla.cds.gateway.security;
 
 
-import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
@@ -24,10 +23,14 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
-@RequiredArgsConstructor
 public class BroadcastFilter implements GatewayFilter {
     private final WebClient.Builder webClientBuilder;
     private final DiscoveryClient discoveryClient;
+
+    public BroadcastFilter(WebClient.Builder webClientBuilder, DiscoveryClient discoveryClient) {
+        this.webClientBuilder = webClientBuilder;
+        this.discoveryClient = discoveryClient;
+    }
 
     private static List<String> EXCLUDED_SERVICES;
     private final List<String> extraExcluded = new ArrayList<>();
@@ -53,7 +56,7 @@ public class BroadcastFilter implements GatewayFilter {
         List<String> serviceIds = this.discoveryClient.getServices()
                                                       .stream()
                                                       .filter(s -> !(EXCLUDED_SERVICES.contains(s)
-                                                              || extraExcluded.contains(s)))
+                                                          || extraExcluded.contains(s)))
                                                       .toList();
 
         List<ServiceInstance> serviceInstances = serviceIds.stream()
@@ -79,12 +82,12 @@ public class BroadcastFilter implements GatewayFilter {
     }
 
     private Mono<Void> forwardRequest(
-            URI serviceUri,
-            RequestPath requestPath,
-            MultiValueMap<String, String> cookieMap,
-            HttpHeaders headers,
-            Flux<DataBuffer> body
-                                     ) {
+        URI serviceUri,
+        RequestPath requestPath,
+        MultiValueMap<String, String> cookieMap,
+        HttpHeaders headers,
+        Flux<DataBuffer> body
+    ) {
         return this.webClientBuilder.build()
                                     .post()
                                     .uri(String.format("%s%s", serviceUri, requestPath))

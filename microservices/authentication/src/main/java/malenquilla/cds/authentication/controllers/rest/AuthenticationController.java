@@ -39,8 +39,9 @@ public class AuthenticationController {
 
     @PostMapping("/refresh")
     public void refresh(
-            @CookieValue(value = ECookies.REFRESH_TOKEN, required = false) String cookie,
-            HttpServletResponse response) {
+        @CookieValue(value = ECookies.REFRESH_TOKEN, required = false) String cookie,
+        HttpServletResponse response
+    ) {
         this.authenticationService.refresh(cookie, response);
     }
 }
